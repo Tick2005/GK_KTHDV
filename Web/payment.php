@@ -17,7 +17,7 @@ if (!isset($_SESSION['last_regeneration']) || (time() - $_SESSION['last_regenera
 $student_id = $_SESSION['student_id'];
 
 try {
-    // ✅ Lấy thông tin người nộp (payer)
+    // Fetch payer information
     $stmt = $pdo->prepare("SELECT * FROM students WHERE student_id = ?");
     $stmt->execute([$student_id]);
     $payer = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -31,24 +31,24 @@ try {
     die("Database error: " . $e->getMessage());
 }
 
-// Generate CSRF token
+// Generate CSRF token only if not set
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Biến dữ liệu hiển thị
-$student = null;   // Người được đóng học phí
+// Variables for display
+$student = null; // Student to be paid for
 $fees = [];
 $total_due = 0;
 $error = "";
 
 // Handle POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 1. Tìm kiếm sinh viên
+    // 1. Search for student
     if (isset($_POST['search_student_id'])) {
         $search_id = trim($_POST['search_student_id']);
-        if (strlen($search_id) !== 8) {
-            $error = "MSSV phải có 8 ký tự.";
+        if (strlen($search_id) !== 8 || !preg_match('/^[A-Za-z0-9]{8}$/', $search_id)) {
+            $error = "MSSV phải có 8 ký tự và chỉ chứa chữ cái hoặc số.";
         } else {
             $stmt = $pdo->prepare("SELECT * FROM students WHERE student_id = ?");
             $stmt->execute([$search_id]);
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // 2. Thanh toán toàn bộ
+    // 2. Process payment
     elseif (isset($_POST['pay_all'])) {
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
             $error = "CSRF token không hợp lệ.";
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $target_id = trim($_POST['target_student_id'] ?? '');
 
-            // Lấy sinh viên mục tiêu
+            // Fetch target student
             $stmt = $pdo->prepare("SELECT * FROM students WHERE student_id = ?");
             $stmt->execute([$target_id]);
             $student = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -111,38 +111,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($total_due <= 0) {
                     $error = "Không có học phí cần thanh toán.";
                 } elseif ($payer['balance'] < $total_due) {
-                    // Không đủ tiền
                     header("Location: payment-fail.php?reason=insufficient_funds&amount=$total_due&balance={$payer['balance']}");
                     exit;
                 } else {
                     try {
                         $pdo->beginTransaction();
 
-                        // Tạo transaction chính
-                        $stmt = $pdo->prepare("INSERT INTO transactions 
-                            (payer_id, payee_id, amount, status, created_at) 
-                            VALUES (?, ?, ?, 'pending', NOW())");
-                        $stmt->execute([$payer['id'], $student['id'], $total_due]);
-                        $transaction_id = $pdo->lastInsertId();
-
-                        // Chi tiết học phí
+                        // Create a transaction for each unpaid tuition fee
+                        $transaction_ids = [];
                         foreach ($fees as $f) {
-                            $stmt = $pdo->prepare("INSERT INTO transaction_details 
-                                (transaction_id, tuition_id, amount) 
-                                VALUES (?, ?, ?)");
-                            $stmt->execute([$transaction_id, $f['id'], $f['amount']]);
+                            $stmt = $pdo->prepare("INSERT INTO transactions 
+                                (payer_id, fee_id, amount, status, created_at, note) 
+                                VALUES (?, ?, ?, 'pending', NOW(), ?)");
+                            $note = "Thanh toán học phí {$f['semester']} năm học {$f['school_year']} cho {$student['student_id']}";
+                            $stmt->execute([$payer['student_id'], $f['fee_id'], $f['amount'], $note]);
+                            $transaction_ids[] = $pdo->lastInsertId();
                         }
 
-                        // Tạo OTP
+                        // Create OTP for the first transaction (or handle as needed)
                         $otp_code = rand(100000, 999999);
                         $stmt = $pdo->prepare("INSERT INTO otps 
                             (transaction_id, otp_code, expires_at) 
                             VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 2 MINUTE))");
-                        $stmt->execute([$transaction_id, $otp_code]);
+                        $stmt->execute([$transaction_ids[0], $otp_code]);
 
                         $pdo->commit();
 
-                        header("Location: otp.php?tid=$transaction_id");
+                        // Regenerate CSRF token after successful transaction
+                        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+                        // Redirect to OTP page with the first transaction ID
+                        header("Location: otp.php?tid=" . $transaction_ids[0]);
                         exit;
                     } catch (Exception $e) {
                         $pdo->rollBack();
@@ -156,9 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-// Regenerate CSRF token mỗi lần load lại
-$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 ?>
 
 <!DOCTYPE html>
@@ -220,7 +216,7 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     </style>
 </head>
 <body>
-     <header class="header bg-primary text-white p-3 d-flex align-items-center justify-content-between">
+    <header class="header bg-primary text-white p-3 d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-3">
             <img src="img/Logo-TDTU.png" alt="Logo TDTU" class="logo">
             <h2 class="m-0">iBanking TDTU</h2>
@@ -298,7 +294,6 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                         <form method="POST">
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                             <input type="hidden" name="target_student_id" value="<?php echo htmlspecialchars($student['student_id']); ?>">
-
                             <input type="hidden" name="pay_all" value="1">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="agree_terms" name="agree_terms" required>
