@@ -1,5 +1,20 @@
 <?php
 header('Content-Type: application/json');
+// Bắt lỗi PHP toàn cục, log ra file, không hiển thị HTML lỗi
+set_exception_handler(function($e) {
+    error_log($e);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Internal server error']);
+    exit();
+});
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("PHP Error [$errno] $errstr in $errfile:$errline");
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Internal server error']);
+    exit();
+});
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 session_start();
 include '../db.php';
 
@@ -23,9 +38,21 @@ try {
     $stmt->execute([$trans_id]);
     $trans = $stmt->fetch();
     if (!$trans || $trans['payer_id'] !== $_SESSION['user_id']) throw new Exception('Invalid transaction');
-    $stmt = $pdo->prepare("SELECT * FROM otps WHERE transaction_id = ? AND is_used = FALSE AND expires_at > NOW() AND otp_code = ?");
+    $stmt = $pdo->prepare("SELECT * FROM otps WHERE transaction_id = ? AND otp_code = ?");
     $stmt->execute([$trans_id, $otp]);
-    if (!$otp_record = $stmt->fetch()) throw new Exception('Invalid or expired OTP');
+    $debug_otp = $stmt->fetch();
+    // Kiểm tra từng điều kiện và trả về debug nếu sai
+    if (!$debug_otp) {
+        throw new Exception('OTP not found for this transaction. Debug: ' . json_encode(['trans_id'=>$trans_id,'otp'=>$otp]));
+    }
+    if ($debug_otp['is_used']) {
+        throw new Exception('OTP already used. Debug: ' . json_encode($debug_otp));
+    }
+    if (strtotime($debug_otp['expires_at']) <= time()) {
+        throw new Exception('OTP expired. Debug: ' . json_encode($debug_otp));
+    }
+    // Đúng OTP, chưa dùng, chưa hết hạn
+    $otp_record = $debug_otp;
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("SELECT balance FROM customer WHERE user_id = ? FOR UPDATE");
     $stmt->execute([$trans['payer_id']]);
@@ -43,9 +70,10 @@ try {
     $pdo->commit();
     echo json_encode(['success' => true, 'message' => 'Payment successful', 'trans_id' => $trans_id]);
 } catch (Exception $e) {
-    $pdo->rollBack();
-    $stmt = $pdo->prepare("UPDATE transactions SET status = 'failed', note = ? WHERE transaction_id = ?");
-    $stmt->execute([$e->getMessage(), $trans_id]);
+    if ($pdo && $pdo->inTransaction()) $pdo->rollBack();
+    if (isset($stmt) && isset($trans_id)) {
+        $stmt = $pdo->prepare("UPDATE transactions SET status = 'failed', note = ? WHERE transaction_id = ?");
+        $stmt->execute([$e->getMessage(), $trans_id]);
+    }
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-?>
