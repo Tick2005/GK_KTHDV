@@ -1,10 +1,24 @@
 <?php
 session_start();
-if (!isset($_SESSION['student_id'])) {
+$trans_id = isset($_GET['trans_id']) ? $_GET['trans_id'] : '';
+if ($trans_id) {
+    // Lấy student_id từ transaction nếu chưa có trong session
+    if (!isset($_SESSION['student_id'])) {
+        include_once '../db.php';
+        $stmt = $pdo->prepare('SELECT t.fee_id, f.student_id FROM transactions t JOIN tuitionfees f ON t.fee_id = f.fee_id WHERE t.transaction_id = ?');
+        $stmt->execute([$trans_id]);
+        $row = $stmt->fetch();
+        if ($row && isset($row['student_id'])) {
+            $_SESSION['student_id'] = $row['student_id'];
+        } else {
+            header('Location: /GK_KTHDV/Web/html/index.php');
+            exit;
+        }
+    }
+} else if (!isset($_SESSION['student_id'])) {
     header('Location: /GK_KTHDV/Web/html/index.php');
     exit;
 }
-$trans_id = isset($_GET['trans_id']) ? $_GET['trans_id'] : '';
 ?>
 <!DOCTYPE html>
 <html>
