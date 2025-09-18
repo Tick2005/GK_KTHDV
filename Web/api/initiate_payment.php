@@ -3,9 +3,36 @@ header('Content-Type: application/json');
 session_start();
 include '../db.php';
 
-// Hàm gửi OTP (giả định)
+// Hàm gửi OTP thực tế bằng PHPMailer
 function send_email_otp($email, $otp) {
-    return true;
+    require_once __DIR__ . '/../src/PHPMailer.php';
+    require_once __DIR__ . '/../src/SMTP.php';
+    require_once __DIR__ . '/../src/Exception.php';
+    
+    $mail = new \PHPMailer\PHPMailer\PHPMailer();
+    try {
+        // Cấu hình SMTP Gmail
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'soagk1tdtu@gmail.com';
+        $mail->Password = 'wveg zevy kdya rxbv';
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+
+        $mail->setFrom('soagk1tdtu@gmail.com', 'iBanking TDTU');
+        $mail->addAddress($email);
+        $mail->isHTML(true);
+        $mail->Subject = 'Mã xác thực OTP giao dịch học phí';
+        $mail->Body = '<p>Mã OTP của bạn là: <b>' . htmlspecialchars($otp) . '</b></p><p>Mã có hiệu lực trong 5 phút.</p>';
+
+        if (!$mail->send()) {
+            return false;
+        }
+        return true;
+    } catch (\Exception $e) {
+        return false;
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
@@ -49,7 +76,8 @@ try {
     $email = $stmt->fetchColumn();
     if (!send_email_otp($email, $otp)) throw new Exception('Failed to send OTP');
     $pdo->commit();
-    echo json_encode(['success' => true, 'transaction_id' => $trans_id]);
+    // Trả về cả OTP để kiểm tra (chỉ dùng cho debug, sau này cần xoá)
+    echo json_encode(['success' => true, 'transaction_id' => $trans_id, 'otp_debug' => $otp]);
 } catch (Exception $e) {
     $pdo->rollBack();
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
