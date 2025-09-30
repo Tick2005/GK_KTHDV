@@ -132,8 +132,21 @@ class PaymentService {
 
         // 8) perform payment: deduct balance, mark fee paid, mark otp used, update transaction success
         $this->userRepo->updateBalance($payerId, $transaction['amount']); // assume this subtracts
+
+        // Get all unpaid fees for this student at the time of transaction
         $fee = $this->feeRepo->findById($transaction['fee_id']);
         $student = $this->studentRepo->findById($fee['student_id'] ?? null);
+
+        // Collect all unpaid fee IDs for this student
+        $unpaidFees = $this->feeRepo->getUnpaidFeesByStudentId($fee['student_id']);
+        $unpaidFeeIds = array_map(fn($f) => $f['fee_id'], $unpaidFees);
+
+        // Decide which update method to use
+        if (count($unpaidFeeIds) === 1) {
+            $this->feeRepo->updateStatusToPaid($unpaidFeeIds[0]);
+        } elseif (count($unpaidFeeIds) > 1) {
+            $this->feeRepo->updateMultipleStatusToPaid($unpaidFeeIds);
+        }
 
         $note = sprintf(
             "Tuition payment completed for student %s - Semester %s, Year %s",
@@ -143,7 +156,6 @@ class PaymentService {
         );
 
         $this->transactionRepo->updateStatus($transactionId, 'success', $note);
-        $this->feeRepo->updateStatusToPaid($transaction['fee_id']);
         $this->otpRepo->markAsUsedById($otp['otp_id']);
 
         $updatedTransaction = $this->transactionRepo->findById($transactionId);
