@@ -14,9 +14,19 @@ class FeeRepository {
         return $stmt->fetchAll();
     }
 
+    // Update status to paid for a single fee
     public function updateStatusToPaid($feeId) {
         $stmt = $this->pdo->prepare('UPDATE tuitionfees SET status = "paid" WHERE fee_id = ?');
         return $stmt->execute([$feeId]);
+    }
+
+    // Update status to paid for multiple fees
+    public function updateMultipleStatusToPaid(array $feeIds) {
+        if (empty($feeIds)) return false;
+        $placeholders = implode(',', array_fill(0, count($feeIds), '?'));
+        $sql = "UPDATE tuitionfees SET status = 'paid' WHERE fee_id IN ($placeholders)";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($feeIds);
     }
 
     public function findById($feeId) {
