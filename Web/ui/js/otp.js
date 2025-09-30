@@ -3,7 +3,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const resendBtn = document.getElementById('resend-otp');
     const cancelBtn = document.getElementById('cancel-transaction');
     const alertBox = document.getElementById('otp-alert');
-    const otpTimer = document.getElementById('otp-timer');
+    let otpTimer = document.getElementById('otp-timer');
+
+    // Timer variables
+    let otpCountdown = null;
+    let timeLeft = 300;
+
+    function startOtpTimer() {
+        // Clear any existing timer
+        if (otpCountdown) clearInterval(otpCountdown);
+        timeLeft = 300;
+        otpTimer.textContent = `${timeLeft}s`;
+        otpCountdown = setInterval(() => {
+            timeLeft--;
+            otpTimer.textContent = `${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(otpCountdown);
+                otpTimer.textContent = 'OTP expired';
+                if (resendBtn) resendBtn.disabled = false;
+            }
+        }, 1000);
+    }
 
     // Hàm show alert với timeout
     function showAlert(message, type = 'danger', duration = 5000) {
@@ -75,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await apiFetch('resend_otp', { method: 'POST', body: { transaction_id } });
                 showAlert('New OTP has been sent', 'success');
+                startOtpTimer(); // Reset timer properly
             } catch (err) {
                 showAlert(err.message, 'danger');
             } finally {
@@ -109,17 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // OTP Timer
+    // Start timer on page load
     if (otpTimer) {
-        let timeLeft = 300;
-        const timer = setInterval(() => {
-            timeLeft--;
-            otpTimer.textContent = `${timeLeft}s`;
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                otpTimer.textContent = 'OTP expired';
-                if (resendBtn) resendBtn.disabled = false;
-            }
-        }, 1000);
+        startOtpTimer();
     }
 });
