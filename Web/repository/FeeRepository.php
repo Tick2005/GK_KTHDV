@@ -24,5 +24,12 @@ class FeeRepository {
         $stmt->execute([$feeId]);
         return $stmt->fetch(PDO::FETCH_ASSOC); // Trả về 1 record hoặc null
     }
+
+    // Khóa row khoản phí để tránh hai giao dịch đồng thời cho cùng một khoản phí
+    public function lockFeeForUpdate($feeId) {
+        $stmt = $this->pdo->prepare('SELECT fee_id FROM tuitionfees WHERE fee_id = ? FOR UPDATE');
+        $stmt->execute([$feeId]);
+        return $stmt->fetch();
+    }
 }
 ?>

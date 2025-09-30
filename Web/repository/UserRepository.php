@@ -60,5 +60,12 @@ class UserRepository {
         $stmt->execute([$userId]);
         return $stmt->fetchColumn();
     }
+
+    // Khóa row tài khoản người nộp tiền để tránh conflict khi xác nhận giao dịch
+    public function lockForUpdate($userId) {
+        $stmt = $this->pdo->prepare('SELECT user_id FROM customer WHERE user_id = ? FOR UPDATE');
+        $stmt->execute([$userId]);
+        return $stmt->fetch();
+    }
 }
 ?>

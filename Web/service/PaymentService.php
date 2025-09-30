@@ -73,6 +73,12 @@ class PaymentService {
             return ['success' => false, 'message' => 'Invalid transaction.'];
         }
 
+        // 1.1) Khóa row tài khoản người nộp tiền để tránh conflict số dư
+        $this->userRepo->lockForUpdate($payerId);
+
+        // 1.2) Khóa row khoản phí để tránh hai giao dịch đồng thời cho cùng một khoản phí
+        $this->feeRepo->lockFeeForUpdate($transaction['fee_id']);
+
         // 2) get latest OTP for this transaction
         $otp = $this->otpRepo->findByTransactionId($transactionId); // ensure this returns the OTP row
         if (!$otp) {
