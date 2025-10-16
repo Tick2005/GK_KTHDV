@@ -1,0 +1,394 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+background: linear-gradient(135deg, #e6f0fa 0%, #f5f7fa 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: #005555;
+  padding: 15px 0;
+}
+
+.logo {
+  width: 200px;
+}
+
+
+.left, .right {
+    flex: 1;
+}
+
+.title {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.navbar-nav .nav-link {
+  color: #fff !important;
+  font-size: 16px;
+  padding: 8px 15px;
+  transition: background-color 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+.navbar-nav .nav-link i {
+  margin-right: 8px;
+}
+
+.navbar-toggler {
+  border: none;
+  background: none;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+@media (max-width: 767px) {
+  .navbar-collapse {
+    background: #005555;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .navbar-nav .nav-link {
+    padding: 10px;
+  }
+}
+
+main {
+  flex: 1;
+  padding: 20px;
+}
+
+footer {
+  background: #fff;
+  padding: 10px 20px;
+  text-align: right;
+  border-top: 1px solid #ddd;
+}
+
+.card-login {
+  min-width: 500px;
+  width:auto;
+  min-height: 300px;
+  height: auto;
+  border-radius: 10px;
+    background: linear-gradient(to right, #0052cc, #ffffff); 
+  margin: 20px auto;
+  padding: 20px;
+}
+.card {
+  min-width: 500px;
+  width:auto;
+  min-height: 300px;
+  height: auto;
+  border-radius: 10px;
+    background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+}
+
+.card h2 {
+  color: #005555;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.search-box input {
+  max-width: 300px;
+  margin-bottom: 20px;
+}
+
+.search-time {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-time table {
+  margin: 0;
+}
+
+.search-time th, .search-time td {
+  border: none;
+  padding: 5px 10px;
+}
+
+.search-time label {
+  font-weight: 600;
+  color: #005555;
+}
+
+.alert {
+  margin-top: 10px;
+}
+.user-info h5, .student-info h5 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #000000;
+}
+h5.fee-info {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #000000;
+  background-color: #fbbf24;
+  padding:10px;
+}
+.user-info h5{
+  background-color:#93c5fd;
+  padding:10px;
+}
+.student-info h5 {
+  background-color:#24ec8f;
+  padding:10px;
+}
+.table-transactions {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-transactions th,
+.table-transactions td {
+  vertical-align: middle;
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.table-transactions th {
+  background: linear-gradient(100deg, #005555, #007777);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-transactions tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.table-transactions tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.btn {
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+#otp-form {
+  max-width: 400px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+#otp-form input[type="text"] {
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 10px;
+  margin-bottom: 20px;
+}
+
+#otp-timer {
+  font-size: 18px;
+  color: #dc3545;
+  margin-top: 10px;
+}
+.form-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #333;
+  display: block;
+  margin-bottom: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.form-group input {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 12px 16px;
+  width: 100%;
+  font-size: 1rem;
+  color: #1f2937;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-group input:hover {
+  border-color: #93c5fd;
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.form-group input:invalid:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+@media (max-width: 768px) {
+  .table-transactions th,
+  .table-transactions td {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .table-transactions th {
+    font-size: 0.8rem;
+  }
+
+  .card {
+    min-width: auto;
+    margin: 10px;
+  }
+
+  .search-time {
+    padding: 15px;
+  }
+
+  .search-time th, .search-time td {
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+
+  .search-time th {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-group input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+  }
+}
+
+.logout-box {
+  max-width: 600px;
+  margin: 50px auto;
+  text-align: center;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.countdown {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.form-control-static {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  width: 100%;
+}
+
+#user-section .form-label {
+  font-weight: 500;
+}
+
+#toggle-balance {
+  vertical-align: middle;
+}
+
+.input-group .form-control[readonly] {
+  background: #f8f9fa;
+  border: 1px solid #ced4da;
+}
+
+.input-group .btn-outline-secondary {
+  border-left: none;
+}
+
+.icon-preview {
+  display: block;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.icon-container {
+  max-width: 300px;
+  margin: 0 auto 20px;
+}
+
+.icon-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.icon-option {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s, border 0.2s;
+}
+
+.icon-option:hover {
+  transform: scale(1.1);
+  border: 2px solid #005555;
+}
+
+.icon-option div {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+}
+
+.icon-option img {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
